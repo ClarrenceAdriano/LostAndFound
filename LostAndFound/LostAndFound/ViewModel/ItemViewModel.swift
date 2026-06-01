@@ -1,17 +1,11 @@
 import Foundation
 import SwiftUI
 import FirebaseFirestore
-import os
+import Combine
 
-// MARK: - ItemViewModel
-
-/// Drives ItemBoardView, ItemDetailView, AddListingView, MyReportsView, and AdminViews.
-/// Translates ReportService and ClaimService results into @Published UI state.
-/// No business logic lives in Views — all service calls and state mutations are here.
 @MainActor
 final class ItemViewModel: ObservableObject {
 
-    // MARK: - Properties
 
     @Published var reports: [LostItemReport] = []
     @Published var claims: [Claim] = []
@@ -22,32 +16,16 @@ final class ItemViewModel: ObservableObject {
 
     private let reportService: ReportService
     private let claimService: ClaimService
-    private let notificationService: NotificationService
-    private let logger = Logger(
-        subsystem: "com.uc.lostfound",
-        category: "ItemViewModel"
-    )
 
 
-    // MARK: - Init
-
-    /// Creates an ItemViewModel with injected services.
-    /// - Parameters:
-    ///   - reportService: Service handling Firestore report operations
-    ///   - claimService: Service handling Firestore claim operations
-    ///   - notificationService: Service handling FCM push notifications
     init(
-        reportService: ReportService = .shared,
-        claimService: ClaimService = .shared,
-        notificationService: NotificationService = .shared
+        reportService: ReportService? = nil,
+        claimService: ClaimService? = nil
     ) {
-        self.reportService = reportService
-        self.claimService = claimService
-        self.notificationService = notificationService
+        self.reportService = reportService ?? ReportService.shared
+        self.claimService = claimService ?? ClaimService.shared
     }
 
-
-    /// Loads all claims from Firestore and updates the published claims array.
     func fetchAllClaims() async {
         let result = await claimService.fetchClaims()
         switch result {
@@ -59,12 +37,6 @@ final class ItemViewModel: ObservableObject {
     }
 
 
-    // MARK: - Public Methods — Claims
-
-    /// Submits a claim for a found item and notifies the report owner via FCM.
-    /// - Parameters:
-    ///   - itemId: Firestore document ID of the found item report
-    ///   - claim: Fully populated Claim model from the claimant
     func submitClaim(itemId: String, claim: Claim) async {
         isLoading = true
         errorMessage = nil
@@ -78,19 +50,11 @@ final class ItemViewModel: ObservableObject {
         case .success(let created):
             claims.insert(created, at: 0)
             successMessage = "Your claim has been submitted!"
-            await notificationService.notifyReporterOfNewClaim(
-                reporterUserId: reporterIdFor(itemId: itemId),
-                itemTitle: titleFor(itemId: itemId)
-            )
         case .failure(let error):
             errorMessage = error.errorDescription
         }
     }
-
-    /// Updates a claim's approval status. Admin-only action — enforce RBAC at call site.
-    /// - Parameters:
-    ///   - claimId: Firestore document ID of the claim
-    ///   - newStatus: Target ClaimStatus (.approved or .rejected)
+    
     func updateClaimStatus(claimId: String, newStatus: ClaimStatus) async {
         let result = await claimService.updateClaimStatus(
             claimId: claimId,
@@ -105,11 +69,7 @@ final class ItemViewModel: ObservableObject {
             if newStatus == .approved {
                     await markReportAsClaimed(itemId: updated.itemId)
             }
-            
-            await notificationService.notifyClaimantOfStatusChange(
-                claimantUserId: updated.claimantId,
-                newStatus: newStatus
-            )
+                
         case .failure(let error):
             errorMessage = error.errorDescription
         }
@@ -146,36 +106,89 @@ final class ItemViewModel: ObservableObject {
             errorMessage = error.localizedDescription
         }
     }
+    
+    func fetchAllReports() async {
+        isLoading = true
+        errorMessage = nil
+
+        let result = await reportService.fetchAllReports()
+
+        isLoading = false
+
+        switch result {
+        case .success(let fetched):
+            reports = fetched
+        case .failure(let error):
+            errorMessage = error.errorDescription
+        }
+    }
+
+    func submitReport(_ report: LostItemReport, imageData: Data? = nil) async {
+        isLoading = true
+        errorMessage = nil
+        successMessage = nil
+
+        let result = await reportService.createReport(report, imageData: imageData)
+
+        isLoading = false
+
+        switch result {
+        case .success(let created):
+            reports.insert(created, at: 0)
+            successMessage = "Your listing has been posted!"
+        case .failure(let error):
+            errorMessage = error.errorDescription
+        }
+    }
+
+    func deleteReport(reportId: String, userId: String) async {
+        let result = await reportService.deleteReport(
+            reportId: reportId,
+            userId: userId
+        )
+        switch result {
+        case .success:
+            reports.removeAll { $0.id == reportId }
+            claims.removeAll { $0.itemId == reportId }
+        case .failure(let error):
+            errorMessage = error.errorDescription
+        }
+    }
+
+    func filteredReports(search: String, filter: ItemStatus?) -> [LostItemReport] {
+        reports.filter { report in
+            guard report.status != .claimed else { return false }
+            let matchesSearch = search.isEmpty
+                || report.title.localizedCaseInsensitiveContains(search)
+                || report.location.localizedCaseInsensitiveContains(search)
+            let matchesFilter = filter == nil || report.status == filter
+            return matchesSearch && matchesFilter
+        }
+    }
+
+    func reports(for userId: String) -> [LostItemReport] {
+        reports.filter { $0.reporterId == userId }
+    }
 
 
-    /// Returns all claims associated with a specific report.
-    /// - Parameter itemId: Firestore document ID of the report
-    /// - Returns: Filtered array of Claim
+
     func claims(for itemId: String) -> [Claim] {
         claims.filter { $0.itemId == itemId }
     }
 
 
-    /// Returns whether a specific user has already claimed a specific item.
-    /// - Parameters:
-    ///   - itemId: Firestore document ID of the report
-    ///   - userId: UID of the user to check
-    /// - Returns: true if an existing claim is found
     func hasClaimed(itemId: String, userId: String) async -> Bool {
         await claimService.hasClaimed(itemId: itemId, userId: userId)
     }
 
-    /// Total number of lost-status reports (for admin dashboard stat card).
     var totalLost: Int {
         reports.filter { $0.status == .lost }.count
     }
 
-    /// Total number of found-status reports (for admin dashboard stat card).
     var totalFound: Int {
         reports.filter { $0.status == .found }.count
     }
 
-    /// Total number of claims with pending status (for admin dashboard stat card).
     var totalPendingClaims: Int {
         claims.filter { $0.claimStatus == .pending }.count
     }

@@ -7,7 +7,7 @@
 
 import Foundation
 import SwiftUI
-import os
+import Combine
 
 @MainActor
 final class AuthViewModel: ObservableObject {
@@ -18,13 +18,9 @@ final class AuthViewModel: ObservableObject {
     @Published var errorMessage: String?
     
     private let authService: AuthService
-    private let logger = Logger(
-        subsystem: "com.uc.lostfound",
-        category: "AuthViewModel"
-    )
     
-    init(authService: AuthService = .shared) {
-        self.authService = authService
+    init(authService: AuthService? = nil) {
+        self.authService = authService ?? AuthService.shared
     }
     
     func login(email: String, password: String) async {
@@ -41,10 +37,8 @@ final class AuthViewModel: ObservableObject {
         case .success(let user):
             currentUser = user
             isLoggedIn = true
-            logger.info("Auth state: signed in as \(user.role.rawValue)")
         case .failure(let error):
             errorMessage = error.errorDescription
-            logger.warning("Login failed: \(error.localizedDescription)")
         }
     }
     
@@ -62,10 +56,8 @@ final class AuthViewModel: ObservableObject {
         case .success(let user):
             currentUser = user
             isLoggedIn = true
-            logger.info("Registration succeeded: \(user.email, privacy: .private)")
         case .failure(let error):
             errorMessage = error.errorDescription
-            logger.warning("Registration failed: \(error.localizedDescription)")
         }
     }
     
@@ -74,7 +66,6 @@ final class AuthViewModel: ObservableObject {
         currentUser = nil
         isLoggedIn = false
         errorMessage = nil
-        logger.info("Auth state: signed out")
     }
     
     func clearError() {

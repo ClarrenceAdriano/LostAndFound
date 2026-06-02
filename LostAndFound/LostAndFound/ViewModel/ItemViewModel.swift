@@ -16,14 +16,17 @@ final class ItemViewModel: ObservableObject {
 
     private let reportService: ReportService
     private let claimService: ClaimService
+    private let notificationService: NotificationService
 
 
     init(
         reportService: ReportService? = nil,
-        claimService: ClaimService? = nil
+        claimService: ClaimService? = nil,
+        notificationService: NotificationService? = nil
     ) {
         self.reportService = reportService ?? ReportService.shared
         self.claimService = claimService ?? ClaimService.shared
+        self.notificationService = notificationService ?? NotificationService.shared
     }
 
     func fetchAllClaims() async {
@@ -50,6 +53,10 @@ final class ItemViewModel: ObservableObject {
         case .success(let created):
             claims.insert(created, at: 0)
             successMessage = "Your claim has been submitted!"
+            await notificationService.notifyReporterOfNewClaim(
+                reporterUserId: reporterIdFor(itemId: itemId),
+                itemTitle: titleFor(itemId: itemId)
+                )
         case .failure(let error):
             errorMessage = error.errorDescription
         }
@@ -69,6 +76,11 @@ final class ItemViewModel: ObservableObject {
             if newStatus == .approved {
                     await markReportAsClaimed(itemId: updated.itemId)
             }
+            
+            await notificationService.notifyClaimantOfStatusChange(
+                claimantUserId: updated.claimantId,
+                newStatus: newStatus
+            )
                 
         case .failure(let error):
             errorMessage = error.errorDescription
@@ -191,5 +203,13 @@ final class ItemViewModel: ObservableObject {
 
     var totalPendingClaims: Int {
         claims.filter { $0.claimStatus == .pending }.count
+    }
+    
+    private func reporterIdFor(itemId: String) -> String {
+        reports.first { $0.id == itemId }?.reporterId ?? ""
+    }
+    
+    private func titleFor(itemId: String) -> String {
+        reports.first { $0.id == itemId }?.title ?? "an item"
     }
 }

@@ -76,13 +76,13 @@ struct RegisterView: View {
             )
             FormField(
                 label: "University Email",
-                placeholder: "yourname@ciputra.ac.id",
+                placeholder: "yourname@student.ciputra.ac.id",
                 keyboardType: .emailAddress,
                 text: $email
             )
             FormField(
                 label: "Student ID",
-                placeholder: "e.g. UC2021001",
+                placeholder: "e.g. 0107012310023",
                 text: $studentId
             )
             FormField(
@@ -218,4 +218,3 @@ private struct PasswordStrengthIndicator: View {
         }
     }
 }
-

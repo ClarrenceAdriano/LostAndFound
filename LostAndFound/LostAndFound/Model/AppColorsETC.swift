@@ -44,7 +44,7 @@ extension Date {
 extension String {
 
     var isValidUCEmail: Bool {
-        contains("@") && hasSuffix("@ciputra.ac.id")
+        contains("@") && hasSuffix("@student.ciputra.ac.id")
     }
 
     func meetsMinLength(_ min: Int) -> Bool {

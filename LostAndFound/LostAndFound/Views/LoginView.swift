@@ -56,7 +56,7 @@ struct LoginView: View {
         VStack(spacing: 16) {
             FormField(
                 label: "University Email",
-                placeholder: "yourname@ciputra.ac.id",
+                placeholder: "yourname@student.ciputra.ac.id",
                 keyboardType: .emailAddress,
                 text: $email
             )
@@ -96,7 +96,7 @@ struct LoginView: View {
     
     
     private var footerSection: some View {
-        Text("Only @ciputra.ac.id addresses are permitted")
+        Text("Only @student.ciputra.ac.id addresses are permitted")
             .font(.caption)
             .foregroundColor(AppColors.textSecondary)
             .multilineTextAlignment(.center)

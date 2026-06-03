@@ -23,7 +23,7 @@ enum AppError: LocalizedError {
     var errorDescription: String? {
         switch self {
         case .invalidDomain:
-            return "Only @ciputra.ac.id email addresses are permitted."
+            return "Only @student.ciputra.ac.id email addresses are permitted."
         case .invalidInput:
             return "Please fill in all required fields."
         case .emailAlreadyInUse:

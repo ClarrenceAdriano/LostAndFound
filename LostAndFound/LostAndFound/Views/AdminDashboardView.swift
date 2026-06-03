@@ -1,16 +1,9 @@
 import SwiftUI
 
-// MARK: - AdminDashboardView
-
-/// Overview dashboard showing live stats and recent activity for administrators.
 struct AdminDashboardView: View {
-
-    // MARK: - Properties
 
     @EnvironmentObject private var itemViewModel: ItemViewModel
     @EnvironmentObject private var authViewModel: AuthViewModel
-
-    // MARK: - Body
 
     var body: some View {
         NavigationView {
@@ -31,8 +24,6 @@ struct AdminDashboardView: View {
             .navigationBarTitleDisplayMode(.inline)
         }
     }
-
-    // MARK: - Private Sections
 
     private var welcomeHeader: some View {
         HStack {
@@ -107,19 +98,12 @@ struct AdminDashboardView: View {
     }
 }
 
-
-// MARK: - AdminStatCard
-
 struct AdminStatCard: View {
-
-    // MARK: - Properties
 
     let value: String
     let label: String
     let icon: String
     let color: Color
-
-    // MARK: - Body
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
@@ -144,16 +128,9 @@ struct AdminStatCard: View {
     }
 }
 
-
-// MARK: - AdminItemRow
-
 struct AdminItemRow: View {
 
-    // MARK: - Properties
-
     let report: LostItemReport
-
-    // MARK: - Body
 
     var body: some View {
         HStack(spacing: 12) {

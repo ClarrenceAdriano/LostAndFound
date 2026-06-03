@@ -1,12 +1,6 @@
 import SwiftUI
 
-// MARK: - AdminTabView
-
-/// Root navigation shell for admin users.
-/// Uses native TabView — admin role confirmed by RBAC check in RootView.
 struct AdminTabView: View {
-
-    // MARK: - Body
 
     var body: some View {
         TabView {

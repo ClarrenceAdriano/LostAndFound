@@ -1,11 +1,6 @@
 import SwiftUI
 
-// MARK: - AdminItemsView
-
-/// Full list of all reports with search, status filter, and delete controls.
 struct AdminItemsView: View {
-
-    // MARK: - Properties
 
     @EnvironmentObject private var itemViewModel: ItemViewModel
     @EnvironmentObject private var authViewModel: AuthViewModel
@@ -18,8 +13,6 @@ struct AdminItemsView: View {
     private var filteredReports: [LostItemReport] {
         itemViewModel.filteredReports(search: searchText, filter: filterStatus)
     }
-
-    // MARK: - Body
 
     var body: some View {
         NavigationView {
@@ -63,8 +56,6 @@ struct AdminItemsView: View {
         }
     }
 
-    // MARK: - Private Sections
-
     private var searchBar: some View {
         HStack {
             Image(systemName: "magnifyingglass")
@@ -89,8 +80,6 @@ struct AdminItemsView: View {
                 .padding(8)
         }
     }
-
-    // MARK: - Private Helpers
 
     private func confirmDelete() {
         guard let report = reportToDelete,

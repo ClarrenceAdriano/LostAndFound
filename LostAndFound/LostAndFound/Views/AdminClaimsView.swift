@@ -1,11 +1,6 @@
 import SwiftUI
 
-// MARK: - AdminClaimsView
-
-/// Full claims list with status filter tabs and approve / reject controls.
 struct AdminClaimsView: View {
-
-    // MARK: - Properties
 
     @EnvironmentObject private var itemViewModel: ItemViewModel
     @State private var filterStatus: ClaimStatus? = nil
@@ -14,8 +9,6 @@ struct AdminClaimsView: View {
         guard let filter = filterStatus else { return itemViewModel.claims }
         return itemViewModel.claims.filter { $0.claimStatus == filter }
     }
-
-    // MARK: - Body
 
     var body: some View {
         NavigationView {
@@ -41,8 +34,6 @@ struct AdminClaimsView: View {
             }
         }
     }
-
-    // MARK: - Private Sections
 
     private var claimFilterBar: some View {
         HStack(spacing: 0) {
@@ -77,18 +68,10 @@ struct AdminClaimsView: View {
     }
 }
 
-
-// MARK: - AdminClaimCard
-
-/// Claim card with approve / reject controls. Used in dashboard and claims view.
 struct AdminClaimCard: View {
-
-    // MARK: - Properties
 
     @EnvironmentObject private var itemViewModel: ItemViewModel
     let claim: Claim
-
-    // MARK: - Body
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {

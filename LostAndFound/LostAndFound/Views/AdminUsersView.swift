@@ -1,14 +1,8 @@
 import SwiftUI
 
-// MARK: - AdminUsersView
-
-/// List of all registered users visible to administrators.
 struct AdminUsersView: View {
 
-    // MARK: - Properties
     @EnvironmentObject private var itemViewModel: ItemViewModel
-
-    // MARK: - Body
 
     var body: some View {
             NavigationView {
@@ -52,20 +46,13 @@ struct AdminUsersView: View {
 
 }
 
-
-// MARK: - AdminUserRow
-
 private struct AdminUserRow: View {
-
-    // MARK: - Properties
 
     let user: UCUser
 
     private var avatarColor: Color {
         user.role == .admin ? AppColors.admin : AppColors.primary
     }
-
-    // MARK: - Body
 
     var body: some View {
         HStack(spacing: 14) {

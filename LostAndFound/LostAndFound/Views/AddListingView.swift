@@ -9,11 +9,11 @@ import SwiftUI
 import PhotosUI
 
 struct AddListingView: View {
-
+    
     @EnvironmentObject private var itemViewModel: ItemViewModel
     @EnvironmentObject private var authViewModel: AuthViewModel
     @Environment(\.dismiss) private var dismiss
-
+    
     @State private var listingType: ItemStatus = .lost
     @State private var itemTitle: String = ""
     @State private var date: Date = Date()
@@ -23,11 +23,11 @@ struct AddListingView: View {
     @State private var showSuccess: Bool = false
     @State private var selectedPhoto: PhotosPickerItem? = nil
     @State private var selectedImageData: Data? = nil
-
+    
     private var isFormValid: Bool {
         itemTitle.isNotBlank && lastSeen.isNotBlank && description.isNotBlank
     }
-
+    
     var body: some View {
         NavigationView {
             ScrollView {
@@ -46,11 +46,11 @@ struct AddListingView: View {
                         text: $lastSeen
                     )
                     descriptionSection
-
+                    
                     if showValidationError {
                         ErrorBanner(message: "Please fill in all required fields.")
                     }
-
+                    
                     PrimaryButton(
                         title: "SAVE",
                         isLoading: itemViewModel.isLoading
@@ -71,10 +71,21 @@ struct AddListingView: View {
                 }
             }
             .sheet(isPresented: $showSuccess) {
-                SuccessOverlay(message: "Your listing has been posted!") {
+                SuccessOverlay(message: successMessage) {
                     dismiss()
                 }
             }
+        }
+    }
+    
+    private var successMessage: String {
+        switch listingType {
+        case .lost:
+            return "Your lost item has been posted!\nWe hope someone finds it soon."
+        case .found:
+            return "Your listing has been posted!\nPlease bring this item to the admin's office so the owner can collect it."
+        case .claimed:
+            return "Your listing has been posted!"
         }
     }
     
@@ -82,7 +93,7 @@ struct AddListingView: View {
         VStack(alignment: .leading, spacing: 8) {
             Text("Add pictures")
                 .font(.system(size: 15, weight: .medium))
-
+            
             PhotosPicker(selection: $selectedPhoto, matching: .images) {
                 if let data = selectedImageData, let uiImage = UIImage(data: data) {
                     Image(uiImage: uiImage)
@@ -118,7 +129,7 @@ struct AddListingView: View {
             }
         }
     }
-
+    
     private var listingTypeSection: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text("Listing type")
@@ -129,7 +140,7 @@ struct AddListingView: View {
                     isSelected: listingType == .lost,
                     activeColor: AppColors.lost
                 ) { listingType = .lost }
-
+                
                 ListingTypeButton(
                     title: "FOUND",
                     isSelected: listingType == .found,
@@ -138,7 +149,7 @@ struct AddListingView: View {
             }
         }
     }
-
+    
     private var dateSection: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text("Date")
@@ -156,7 +167,7 @@ struct AddListingView: View {
                 )
         }
     }
-
+    
     private var descriptionSection: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text("Description")
@@ -201,13 +212,13 @@ struct AddListingView: View {
 
 
 private struct ListingTypeButton: View {
-
+    
     let title: String
     let isSelected: Bool
     let activeColor: Color
     let action: () -> Void
-
-
+    
+    
     var body: some View {
         Button(action: action) {
             Text(title)
@@ -224,4 +235,3 @@ private struct ListingTypeButton: View {
         }
     }
 }
-
